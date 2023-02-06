@@ -18,11 +18,10 @@ class Simulation:
             for agent_name in agent_dict.keys()
             for grid_name in grid_dict.keys()
         }
-        self.max_reward_history = []
         self.num_sims = num_sims
 
-    def get_max_reward(self, arm_dict):
-        values = list([arm.mean for arm in arm_dict.values()])
+    def get_max_reward(self):
+        values = list([arm.mean for arm in self.arm_dict.values()])
         return np.max(values)
 
     def run_sims(self):
@@ -41,13 +40,11 @@ class Simulation:
                 agent.simulate()
                 self.histories[agent_name].append(agent.get_history())
 
-            self.max_reward_history.append(self.get_max_reward(self.arm_dict))
 
     def get_regret(self):
         regret = pd.DataFrame(
             {
-                agent_name: self.max_reward_history
-                - np.array(agent_history).mean(axis=1)
+                agent_name: self.get_max_reward() - np.array(agent_history).mean(axis=1)
                 for agent_name, agent_history in self.histories.items()
             }
         )

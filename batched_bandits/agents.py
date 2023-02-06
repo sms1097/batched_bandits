@@ -133,8 +133,8 @@ class BatchedBernoulliThompsonAgent:
     def get_arms(self):
         return list(self.A.keys())
 
-    def get_posterior_mean(self):
-        return self.alphas / (self.alphas + self.betas)
+    def get_posterior_mean(self, alphas, betas):
+        return alphas / (alphas + betas)
 
     def sample_posterior(self, alphas, betas):
         return np.random.beta(alphas, betas)
@@ -142,7 +142,9 @@ class BatchedBernoulliThompsonAgent:
     def take_action(self, curr_alphas, curr_betas, greedy=False):
         args = (curr_alphas, curr_betas)
         thetas = (
-            self.sample_posterior(*args) if not greedy else self.get_posterior_mean()
+            self.sample_posterior(*args)
+            if not greedy
+            else self.get_posterior_mean(*args)
         )
         return self.idx2arm[random_argmax(thetas)]
 
@@ -167,7 +169,7 @@ class BatchedBernoulliThompsonAgent:
 
         curr_alphas, curr_betas = self.alphas.copy(), self.betas.copy()
         for _ in range(self.grid[-1]):
-            a = self.take_action(curr_alphas, curr_betas)
+            a = self.take_action(curr_alphas, curr_betas, greedy=True)
             r = self.A[a].sample()
             self.update(a, r)
             self.history.append(r)
