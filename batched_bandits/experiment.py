@@ -23,9 +23,9 @@ class BatchNumberExperiment:
 
         return config
 
-    def save_experiment(self):
+    def save_experiment(self, name):
         out = pd.concat([x.get_regret() for x in self.sims])
-        out.to_csv("batch_number_experiment.csv")
+        out.to_csv(name + ".csv")
 
     def run(self):
         self.sims = []
@@ -54,9 +54,9 @@ class ArmNumberExperiment:
         self.arm_means = arm_means
         self.sims = []
 
-    def save_experiment(self):
+    def save_experiment(self, name):
         out = pd.concat([x.get_regret() for x in self.sims])
-        out.to_csv("arm_number_experiment.csv")
+        out.to_csv(name + ".csv")
 
     def run(self):
         max_mean = np.max(self.arm_means)

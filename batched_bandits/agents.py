@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from .util import random_argmax, random_argmax_dict, average_dictionary_keys
+from .util import random_argmax, random_argmax_dict
 
 
 class BaSEAgent:
@@ -13,6 +13,7 @@ class BaSEAgent:
         self.gamma = gamma
         self.reward_dict = {arm: [] for arm in self.A.keys()}
         self.history = []
+        self.arm_dict_len = []
 
     def get_history(self):
         return self.history
@@ -31,15 +32,18 @@ class BaSEAgent:
         return a
 
     def update(self):
-        tau_m = np.min([len(a_r) for a_r in self.reward_dict.values()])
-        Y_i = {arm: np.mean(a_r[:tau_m]) for arm, a_r in self.reward_dict.items()}
-        Y_max = np.max(list(Y_i.values()))
+        # don't process if A is single action
+        # roundoff errors can occur with comparison of Y_i
+        # and Y_max
+        if len(self.A) > 1:
+            Y_i = {arm: np.mean(a_r) for arm, a_r in self.reward_dict.items()}
+            Y_max = np.max(list(Y_i.values()))
 
-        for arm in self.get_arms():
-            if Y_max - Y_i[arm] >= np.sqrt(
-                self.gamma * np.log(self.T * self.K) / tau_m
-            ):
-                self.A.pop(arm)
+            for arm in self.get_arms():
+                if Y_max - Y_i[arm] >= np.sqrt(
+                    self.gamma * np.log(self.T * self.K) / len(self.reward_dict[arm])
+                ):
+                    self.A.pop(arm)
 
     def simulate(self):
         # explore in earlier batches with se
@@ -51,11 +55,10 @@ class BaSEAgent:
                 self.reward_dict[a].append(r)
                 self.history.append(r)
             self.update()
+            self.arm_dict_len.append(len(self.get_arms()))
 
         # exploit last batch
-        self.Y_i_ = average_dictionary_keys(
-            {a: self.reward_dict[a] for a in self.get_arms()}
-        )
+        self.Y_i_ = {a: np.mean(self.reward_dict[a]) for a in self.get_arms()}
         for _ in range(self.grid[-1]):
             a = self.get_action(greedy=True)
             r = self.A[a].sample()
@@ -66,13 +69,12 @@ class BaSEAgent:
 
 
 class BatchedEpsGreedyAgent:
-    def __init__(self, arm_dict, grid, epsilon, eps_decay):
+    def __init__(self, arm_dict, grid, epsilon):
         self.T = np.sum(grid)
         self.grid = grid
         self.A = arm_dict.copy()
         self.reward_dict = {arm: [] for arm in self.A.keys()}
         self.epsilon = epsilon
-        self.eps_decay = eps_decay
         self.K = len(self.A.keys())
         self.history = []
 
@@ -106,7 +108,8 @@ class BatchedEpsGreedyAgent:
                 r = self.A[a].sample()
                 self.reward_dict[a].append(r)
                 self.history.append(r)
-            self.epsilon *= self.eps_decay
+
+            self.epsilon *= 1 / len(self.grid)
 
         self.epsilon = 1  # full exploit last batch
         for _ in range(self.grid[-1]):
@@ -118,6 +121,10 @@ class BatchedEpsGreedyAgent:
 
 
 class BatchedBernoulliThompsonAgent:
+    """
+    Some of this code is loosely inspired by the Thompson Sampling Tutorial
+    from Stanford. To see the orog 
+    """
     def __init__(self, arm_dict, grid, alpha_init=1, beta_init=1):
         self.T = np.sum(grid)
         self.grid = grid

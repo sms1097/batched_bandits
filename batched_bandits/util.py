@@ -4,8 +4,7 @@ import seaborn as sns
 
 
 def random_argmax(x):
-    x = np.array(x)
-    return np.argmax(x)
+    return np.random.choice(np.where(np.array(x) == np.max(x))[0])
 
 
 def random_argmax_dict(d):
@@ -13,10 +12,6 @@ def random_argmax_dict(d):
     values = list(d.values())
     key_idx = random_argmax(values)
     return keys[key_idx]
-
-
-def average_dictionary_keys(d):
-    return {key: np.mean(values) for key, values in d.items()}
 
 
 def plot_regret(agent_list=None, exp=None, df=None):
@@ -61,6 +56,10 @@ def make_minimax_grid(T, M):
     return grid2steps(grid)
 
 
+def make_instant_grid(T, M):
+    return [1 for _ in range(T)]
+
+
 def make_arithmetic_grid(T, M):
     step_size = T / M
     return [int(step_size) for _ in range(M)]
@@ -68,4 +67,3 @@ def make_arithmetic_grid(T, M):
 
 def instant_grid(T, M):
     return [1 for _ in range(T)]
-
