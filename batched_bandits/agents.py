@@ -123,8 +123,10 @@ class BatchedEpsGreedyAgent:
 class BatchedBernoulliThompsonAgent:
     """
     Some of this code is loosely inspired by the Thompson Sampling Tutorial
-    from Stanford. To see the orog 
+    from Stanford. Credit for some of the functions goes to those authors here:
+    https://github.com/iosband/ts_tutorial
     """
+
     def __init__(self, arm_dict, grid, alpha_init=1, beta_init=1):
         self.T = np.sum(grid)
         self.grid = grid
